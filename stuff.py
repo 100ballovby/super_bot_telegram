@@ -15,3 +15,17 @@ def make_template(filename):
     return template
 
 
+def parse_horo(sign):
+    url = f"https://horoscopes-ai.p.rapidapi.com/get_horoscope_en/{sign}/tomorrow/general"
+
+    headers = {
+        "X-RapidAPI-Key": "4b3d784309msh1a54be2ab333712p1f580cjsn967b22d81802",
+        "X-RapidAPI-Host": "horoscopes-ai.p.rapidapi.com"
+    }
+
+    response = r.get(url, headers=headers)
+    res = response.json()
+    return res['general'][0]
+
+
+

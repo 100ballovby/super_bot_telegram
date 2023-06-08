@@ -20,6 +20,27 @@ def send_dog(message):
     bot.send_photo(message.chat.id, photo=img)
 
 
+@bot.message_handler(commands=['horo'])
+def get_horo(message):
+    signs = ['Aries ♈️', 'Taurus ♉️', 'Gemini ♊️', 'Cancer ♋️',
+             'Leo ♌️', 'Virgo ♍️', 'Libra ♎️', 'Scorpio ♏️',
+             'Sagittarius ♐️', 'Capricorn ♑️', 'Aquarius ♒️', 'Pisce ♓️']
+    markup = telebot.types.ReplyKeyboardMarkup(row_width=3)  # создать поле для кнопок, в каждой строке по 3 кнопки
+    buttons = [telebot.types.KeyboardButton(sign) for sign in signs]
+    markup.add(*buttons)
+    bot.send_message(message.chat.id, 'Выбери свой знак зодиака:', reply_markup=markup)
+
+
+@bot.message_handler(content_types=['text'])
+def zodiac(message):
+    signs = ['Aries', 'Taurus', 'Gemini', 'Cancer',
+             'Leo', 'Virgo', 'Libra', 'Scorpio',
+             'Sagittarius', 'Capricorn', 'Aquarius', 'Pisce']
+    if message.text[:-3] in signs:
+        zodiac_sign = message.text[:-3]
+        res = stuff.parse_horo(zodiac_sign.lower())
+        bot.send_message(message.chat.id, text=res)
+
 
 if __name__ == '__main__':
     bot.polling()
