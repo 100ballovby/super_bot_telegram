@@ -1,8 +1,9 @@
 import telebot
+from django.conf import settings
 import stuff
 
 
-bot = telebot.TeleBot('')
+bot = telebot.TeleBot(settings.TELEGRAM_BOT_TOKEN)
 
 
 @bot.message_handler(commands=['start'])
@@ -53,7 +54,7 @@ def user_info(message):
     if message.contact is not None:
         text = f'#contacts\nName: {message.contact.first_name} Surname: {message.contact.last_name}, Phone: +{message.contact.phone_number}'
         bot.send_message(115943804, text)
-        bot.send_message(message.chat.id, 'Шпасиба!')
+        bot.send_message(message.chat.id, 'Шпасиба!', reply_markup=telebot.types.ReplyKeyboardRemove())
     elif message.location is not None:
         lat = message.location.latitude
         lon = message.location.longitude
@@ -69,7 +70,7 @@ def handle_password_generator(call):
     complexity = call.data
     password = stuff.generate_password(complexity)
     bot.send_message(call.message.chat.id, 'Password: ')
-    bot.send_message(call.message.chat.id, password)
+    bot.send_message(call.message.chat.id, password, reply_markup=telebot.types.ReplyKeyboardRemove())
 
 
 @bot.message_handler(commands=['password'])
@@ -88,7 +89,7 @@ def zodiac(message):
         res = stuff.parse_horo(zodiac_sign.lower())
         template = stuff.make_template('zodiac')
         msg = template.render(forecast=res)
-        bot.send_message(message.chat.id, text=msg, parse_mode='html')
+        bot.send_message(message.chat.id, text=msg, parse_mode='html', reply_markup=telebot.types.ReplyKeyboardRemove())
 
 
 if __name__ == '__main__':

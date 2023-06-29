@@ -1,3 +1,5 @@
+from django.conf import settings
+import os
 import requests as r
 from jinja2 import Template
 import datetime as dt
@@ -23,7 +25,7 @@ def parse_horo(sign):
     url = f"https://horoscopes-ai.p.rapidapi.com/get_horoscope_en/{sign}/tomorrow/general"
 
     headers = {
-        "X-RapidAPI-Key": "4b3d784309msh1a54be2ab333712p1f580cjsn967b22d81802",
+        "X-RapidAPI-Key": settings.RAPID_TOKEN or "4b3d784309msh1a54be2ab333712p1f580cjsn967b22d81802",
         "X-RapidAPI-Host": "horoscopes-ai.p.rapidapi.com"
     }
 
@@ -38,7 +40,7 @@ def parse_horo(sign):
 def get_weather(lat, lon):
     url = 'https://api.openweathermap.org/data/2.5/forecast'
     params = {
-        'appid': '',
+        'appid': settings.WEATHER_TOKEN,
         'lat': lat,
         'lon': lon,
         'units': 'metric',
