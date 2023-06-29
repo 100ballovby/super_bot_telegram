@@ -25,6 +25,7 @@ SECRET_KEY = os.environ.get('SECRET_KEY')
 TELEGRAM_BOT_TOKEN = os.environ.get('TELEGRAM_KEY')
 WEATHER_TOKEN = os.environ.get('WEATHER_TOKEN')
 RAPID_TOKEN = os.environ.get('RAPID_TOKEN')
+WEBHOOK_URL = 'http://127.0.0.1:8000'
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True

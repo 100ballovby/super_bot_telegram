@@ -1,6 +1,92 @@
-import telebot
 from django.conf import settings
-import stuff
+import os
+import requests as r
+from jinja2 import Template
+import datetime as dt
+import random
+import string
+import json
+import telebot
+
+
+def get_dog_img():
+    url = 'https://random.dog/woof.json'
+    resp = r.get(url).json()
+    return resp['url']
+
+
+def make_template(filename):
+    with open(f'templates/{filename}.html', 'r', encoding='utf-8') as f:
+        text = f.read()
+    template = Template(text)
+    return template
+
+
+def parse_horo(sign):
+    url = f"https://horoscopes-ai.p.rapidapi.com/get_horoscope_en/{sign}/tomorrow/general"
+
+    headers = {
+        "X-RapidAPI-Key": settings.RAPID_TOKEN or "4b3d784309msh1a54be2ab333712p1f580cjsn967b22d81802",
+        "X-RapidAPI-Host": "horoscopes-ai.p.rapidapi.com"
+    }
+
+    response = r.get(url, headers=headers)
+    res = response.json()
+    try:
+        return res['general'][0]
+    except:
+        return 'У владельца бота закончились запросы к API'
+
+
+def get_weather(lat, lon):
+    url = 'https://api.openweathermap.org/data/2.5/forecast'
+    params = {
+        'appid': settings.WEATHER_TOKEN,
+        'lat': lat,
+        'lon': lon,
+        'units': 'metric',
+        'lang': 'ru',
+    }
+    response = r.get(url, params=params).json()
+    text = '🗓️<strong>{}</strong>:\n{}°С, {}\n\n'
+    resp = ''
+    try:
+        for data in response['list']:
+            date = dt.datetime.fromtimestamp(data['dt'])
+            date_res = date.strftime('%d.%m.%Y | %H:%M')
+            temp = data['main']['temp']
+            weather = data['weather'][0]['description']
+
+            if date.hour == 9 or date.hour == 18:
+                resp += text.format(date_res, temp, weather)
+        return resp
+    except:
+        print('Something wrong here')
+
+
+def generate_password(complexity):
+    length = 8
+    characters = string.ascii_lowercase + string.digits
+    if complexity == 'medium':
+        length = 12
+        characters += string.ascii_uppercase
+    elif complexity == 'high':
+        length = 16
+        characters += string.ascii_uppercase + string.punctuation
+    password = ''.join(random.choice(characters) for _ in range(length))
+    return password
+
+
+def generate_keyboard():
+    kb = {
+        'inline_keyboard': [
+            [{'text': 'Низкая', 'callback_data': 'low'}],
+            [{'text': 'Средняя', 'callback_data': 'medium'}],
+            [{'text': 'Высокая', 'callback_data': 'high'}],
+        ]
+    }
+    kb_json = json.dumps(kb)
+    return kb_json
 
 
 bot = telebot.TeleBot(settings.TELEGRAM_BOT_TOKEN)
@@ -8,7 +94,7 @@ bot = telebot.TeleBot(settings.TELEGRAM_BOT_TOKEN)
 
 @bot.message_handler(commands=['start'])
 def start(message):
-    template = stuff.make_template('start')
+    template = make_template('start')
     username = message.chat.username
     msg = template.render(username=username)
     pin = bot.send_message(message.chat.id, text=msg, parse_mode='html')
@@ -17,14 +103,14 @@ def start(message):
 
 @bot.message_handler(commands=['help'])
 def help(message):
-    template = stuff.make_template('help')
+    template = make_template('help')
     msg_text = template.render()
     bot.send_message(message.chat.id, text=msg_text, parse_mode='html')
 
 
 @bot.message_handler(commands=['dog'])
 def send_dog(message):
-    img = stuff.get_dog_img()
+    img = get_dog_img()
     bot.send_photo(message.chat.id, photo=img)
 
 
@@ -60,7 +146,7 @@ def user_info(message):
         lon = message.location.longitude
         text = f'#location\nUser ID: {message.chat.id}, Location: {lat},{lon}'
         bot.send_message(115943804, text)
-        weather = stuff.get_weather(lat, lon)
+        weather = get_weather(lat, lon)
         bot.send_message(message.chat.id, text=weather, parse_mode='html',
                          reply_markup=telebot.types.ReplyKeyboardRemove())
 
@@ -68,7 +154,7 @@ def user_info(message):
 @bot.callback_query_handler(func=lambda call: call.data in ['low', 'medium', 'high'])
 def handle_password_generator(call):
     complexity = call.data
-    password = stuff.generate_password(complexity)
+    password = generate_password(complexity)
     bot.send_message(call.message.chat.id, 'Password: ')
     bot.send_message(call.message.chat.id, password, reply_markup=telebot.types.ReplyKeyboardRemove())
 
@@ -76,7 +162,7 @@ def handle_password_generator(call):
 @bot.message_handler(commands=['password'])
 def handle_password_send(message):
     bot.send_message(message.chat.id, 'Выбери сложность пароля: ',
-                     reply_markup=stuff.generate_keyboard())
+                     reply_markup=generate_keyboard())
 
 
 @bot.message_handler(content_types=['text'])
@@ -86,8 +172,8 @@ def zodiac(message):
              'Sagittarius', 'Capricorn', 'Aquarius', 'Pisce']
     if message.text[:-3] in signs:
         zodiac_sign = message.text[:-3]
-        res = stuff.parse_horo(zodiac_sign.lower())
-        template = stuff.make_template('zodiac')
+        res = parse_horo(zodiac_sign.lower())
+        template = make_template('zodiac')
         msg = template.render(forecast=res)
         bot.send_message(message.chat.id, text=msg, parse_mode='html', reply_markup=telebot.types.ReplyKeyboardRemove())
 
