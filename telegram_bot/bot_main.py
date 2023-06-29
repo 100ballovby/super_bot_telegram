@@ -1,5 +1,4 @@
 from django.conf import settings
-import os
 import requests as r
 from jinja2 import Template
 import datetime as dt

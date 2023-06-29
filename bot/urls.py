@@ -17,8 +17,10 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 from telegram_bot import views
+from telegram_bot.views import set_webhook
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('telegram_webhook', views.telegram_webhook),
 ]
+set_webhook()
